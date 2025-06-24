@@ -62,6 +62,10 @@ public extension UIScrollView {
         // Sometimes ScrollView will Capture nothing without defer;
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Double(Int64(0.3 * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC)) { () -> Void in
             let bounds = self.bounds
+            guard bounds.size.width > 0 && bounds.size.height > 0 else {
+                completionHandler(nil)
+                return
+            }
             UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
             
             if (self.DDGContainsWKWebView()) {
@@ -92,10 +96,17 @@ public extension UIScrollView {
         let bakOffset    = self.contentOffset
         
         // Divide
-        let page  = floorf(Float(self.contentSize.height / self.bounds.height))
-        
+        guard self.bounds.height > 0 && self.contentSize.width > 0 && self.contentSize.height > 0 else {
+            // Recover View
+            self.setContentOffset(bakOffset, animated: false)
+            snapShotView?.removeFromSuperview()
+            self.isShoting = false
+            completionHandler(nil)
+            return
+        }
         UIGraphicsBeginImageContextWithOptions(self.contentSize, false, UIScreen.main.scale)
         
+        let page  = floorf(Float(self.contentSize.height / self.bounds.height))
         self.DDGContentScrollPageDraw(0, maxIndex: Int(page), drawCallback: { [weak self] () -> Void in
             let strongSelf = self
             

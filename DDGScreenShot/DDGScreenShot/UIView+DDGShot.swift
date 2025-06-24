@@ -54,7 +54,11 @@ public extension UIView {
         
         self.isShoting = true
         let bounds = self.bounds
-        
+        guard bounds.size.width > 0 && bounds.size.height > 0 else {
+            self.isShoting = false
+            completionHandler(nil)
+            return
+        }
         UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
         
         let context = UIGraphicsGetCurrentContext()

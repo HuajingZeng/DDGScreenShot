@@ -47,6 +47,7 @@ class DDGScollViewShot: UIViewController {
         leftBtn.setTitleColor(UIColor.blue, for: .normal)
         leftBtn.addTarget(self, action: #selector(DDGScollViewShot.screenShotScroll), for: .touchUpInside)
         leftBtn.frame = CGRect(x: 20, y: height - bottomMargint, width: (width - 60) / 2, height: 40)
+        
         self.view.addSubview(leftBtn)
         
         let rightBtn = UIButton()

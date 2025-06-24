@@ -9,6 +9,8 @@
 import UIKit
 import WebKit
 
+let navHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height + 44;
+let bottomMargint : CGFloat = (UIApplication.shared.statusBarFrame.size.height > 20 ? 34 : 0) + 48;
 class DDGWKWebViewShot: UIViewController ,WKUIDelegate,WKNavigationDelegate {
     var wkWebView: WKWebView!
     var storeScrollView: UIScrollView!

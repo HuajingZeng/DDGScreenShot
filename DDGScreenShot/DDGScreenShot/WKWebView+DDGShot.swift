@@ -61,6 +61,16 @@ public extension WKWebView {
         let page      = floorf(Float( totalSize.height / containerView.bounds.height))
         
         self.frame = CGRect(x: 0, y: 0, width: containerView.bounds.size.width, height: self.scrollView.contentSize.height)
+        guard totalSize.width > 0 && totalSize.height > 0 else {
+            self.isShoting = false
+            // Recover View
+            self.removeFromSuperview()
+            bakSuperView?.insertSubview(self, at: bakIndex!)
+            self.frame = bakFrame
+            containerView.removeFromSuperview()
+            completionHandler(nil)
+            return
+        }
         
         UIGraphicsBeginImageContextWithOptions(totalSize, false, UIScreen.main.scale)
         
@@ -119,7 +129,14 @@ public extension WKWebView {
         
         // Divide
         let page  = floorf(Float(self.scrollView.contentSize.height / self.bounds.height))
-        
+        guard self.scrollView.contentSize.width > 0 && self.scrollView.contentSize.height > 0 else {
+            // Recover View
+            self.scrollView.setContentOffset(bakOffset, animated: false)
+            snapShotView?.removeFromSuperview()
+            self.isShoting = false
+            completionHandler(nil)
+            return
+        }
         UIGraphicsBeginImageContextWithOptions(self.scrollView.contentSize, false, UIScreen.main.scale)
         
         self.shotScreenContentScrollPageDraw(0, maxIndex: Int(page), drawCallback: { [weak self] () -> Void in
