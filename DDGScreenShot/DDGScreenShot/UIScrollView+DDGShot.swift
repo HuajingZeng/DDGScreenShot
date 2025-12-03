@@ -17,8 +17,13 @@ public extension UIScrollView {
         
         // Put a fake Cover of View
         let snapShotView = self.snapshotView(afterScreenUpdates: false)
-        snapShotView?.frame = CGRect(x: self.frame.origin.x, y: self.frame.origin.y, width: (snapShotView?.frame.size.width)!, height: (snapShotView?.frame.size.height)!)
-        self.superview?.addSubview(snapShotView!)
+        if let snapShotView = snapShotView {
+            snapShotView.frame = CGRect(x: self.frame.origin.x,
+                                        y: self.frame.origin.y,
+                                        width: snapShotView.frame.size.width,
+                                        height: snapShotView.frame.size.height)
+            self.superview?.addSubview(snapShotView)
+        }
         
         // Backup all properties of scrollview if needed
         let bakFrame     = self.frame
@@ -31,20 +36,24 @@ public extension UIScrollView {
             self.contentOffset = CGPoint(x: 0, y: self.contentSize.height - self.frame.size.height)
         }
         
-        self.DDGRenderImageView({ [weak self] (screenShotImage) -> Void in
+        self.DDGRenderImageView({ [weak self] screenShotImage in
             // Recover View
-            
-            let strongSelf = self!
-            
+            guard let strongSelf = self else {
+                completionHandler(screenShotImage)
+                return
+            }
+
             strongSelf.removeFromSuperview()
             strongSelf.frame = bakFrame
             strongSelf.contentOffset = bakOffset
-            bakSuperView?.insertSubview(strongSelf, at: bakIndex!)
-            
+            if let bakSuperView = bakSuperView, let bakIndex = bakIndex {
+                bakSuperView.insertSubview(strongSelf, at: bakIndex)
+            }
+
             snapShotView?.removeFromSuperview()
-            
+
             strongSelf.isShoting = false
-            
+
             completionHandler(screenShotImage)
         })
         
@@ -67,15 +76,20 @@ public extension UIScrollView {
                 return
             }
             UIGraphicsBeginImageContextWithOptions(bounds.size, false, UIScreen.main.scale)
-            
-            if (self.DDGContainsWKWebView()) {
+            guard let context = UIGraphicsGetCurrentContext() else {
+                UIGraphicsEndImageContext()
+                completionHandler(nil)
+                return
+            }
+
+            if self.DDGContainsWKWebView() {
                 self.drawHierarchy(in: bounds, afterScreenUpdates: true)
-            }else{
-                self.layer.render(in: UIGraphicsGetCurrentContext()!)
+            } else {
+                self.layer.render(in: context)
             }
             let screenShotImage = UIGraphicsGetImageFromCurrentImageContext()
             UIGraphicsEndImageContext()
-            
+
             completionHandler(screenShotImage)
         }
     }
@@ -89,8 +103,13 @@ public extension UIScrollView {
         
         // Put a fake Cover of View
         let snapShotView = self.snapshotView(afterScreenUpdates: true)
-        snapShotView?.frame = CGRect(x: self.frame.origin.x, y: self.frame.origin.y, width: (snapShotView?.frame.size.width)!, height: (snapShotView?.frame.size.height)!)
-        self.superview?.addSubview(snapShotView!)
+        if let snapShotView = snapShotView {
+            snapShotView.frame = CGRect(x: self.frame.origin.x,
+                                        y: self.frame.origin.y,
+                                        width: snapShotView.frame.size.width,
+                                        height: snapShotView.frame.size.height)
+            self.superview?.addSubview(snapShotView)
+        }
         
         // Backup
         let bakOffset    = self.contentOffset
@@ -129,12 +148,19 @@ public extension UIScrollView {
         self.setContentOffset(CGPoint(x: 0, y: CGFloat(index) * self.frame.size.height), animated: false)
         let splitFrame = CGRect(x: 0, y: CGFloat(index) * self.frame.size.height, width: bounds.size.width, height: bounds.size.height)
         
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Double(Int64(0.3 * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC)) { () -> Void in
-            self.drawHierarchy(in: splitFrame, afterScreenUpdates: true)
-            
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Double(Int64(0.3 * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC)) { [weak self] in
+            guard let strongSelf = self else {
+                if index >= maxIndex {
+                    drawCallback()
+                }
+                return
+            }
+
+            strongSelf.drawHierarchy(in: splitFrame, afterScreenUpdates: true)
+
             if index < maxIndex {
-                self.DDGContentScrollPageDraw(index + 1, maxIndex: maxIndex, drawCallback: drawCallback)
-            }else{
+                strongSelf.DDGContentScrollPageDraw(index + 1, maxIndex: maxIndex, drawCallback: drawCallback)
+            } else {
                 drawCallback()
             }
         }
@@ -152,4 +178,3 @@ public extension UIWebView {
     }
     
 }
-
